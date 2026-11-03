@@ -1,0 +1,118 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Live concert stage with stage lights and a crowd silhouette">
+  <defs>
+    <radialGradient id="sky" cx="50%" cy="26%" r="82%" fx="50%" fy="20%">
+      <stop offset="0%" stop-color="#3a1607"/>
+      <stop offset="35%" stop-color="#1a0c0a"/>
+      <stop offset="75%" stop-color="#0b0809"/>
+      <stop offset="100%" stop-color="#060506"/>
+    </radialGradient>
+    <radialGradient id="stageGlow" cx="50%" cy="80%" r="60%">
+      <stop offset="0%" stop-color="#ff7a2e" stop-opacity="0.95"/>
+      <stop offset="30%" stop-color="#f24a0c" stop-opacity="0.5"/>
+      <stop offset="65%" stop-color="#c22a08" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="beam1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffb27a" stop-opacity="0.75"/>
+      <stop offset="100%" stop-color="#ff6b1a" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="beam2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffd6b8" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#ff8f4d" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="beam3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9d7bff" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#6d4bff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="blurBeam" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+    <filter id="blurGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="46"/>
+    </filter>
+  </defs>
+
+  <rect width="1920" height="1080" fill="url(#sky)"/>
+
+  <g opacity="0.5" filter="url(#blurGlow)">
+    <ellipse cx="960" cy="800" rx="620" ry="260" fill="#f24a0c"/>
+    <ellipse cx="960" cy="840" rx="320" ry="160" fill="#ffb27a"/>
+  </g>
+
+  <g filter="url(#blurBeam)">
+    <path d="M500 60 L120 900 L520 900 L760 60 Z" fill="url(#beam1)" opacity="0.5"/>
+    <path d="M720 40 L520 940 L860 940 L920 40 Z" fill="url(#beam2)" opacity="0.4"/>
+    <path d="M1180 40 L1040 940 L1400 940 L1320 40 Z" fill="url(#beam2)" opacity="0.35"/>
+    <path d="M1460 60 L1360 900 L1780 900 L1600 60 Z" fill="url(#beam1)" opacity="0.45"/>
+    <path d="M900 0 L840 900 L1180 900 L1080 0 Z" fill="url(#beam3)" opacity="0.4"/>
+  </g>
+
+  <g opacity="0.9">
+    <circle cx="200" cy="180" r="70" fill="#ffb27a" opacity="0.28" filter="url(#blurBeam)"/>
+    <circle cx="1730" cy="140" r="90" fill="#ff8f4d" opacity="0.24" filter="url(#blurBeam)"/>
+    <circle cx="1580" cy="300" r="34" fill="#ffd6b8" opacity="0.35" filter="url(#blurBeam)"/>
+    <circle cx="360" cy="330" r="26" fill="#ff8f4d" opacity="0.4" filter="url(#blurBeam)"/>
+  </g>
+
+  <g>
+    <rect x="740" y="640" width="440" height="18" rx="9" fill="#0a0a0c" opacity="0.85"/>
+    <rect x="700" y="650" width="520" height="10" rx="5" fill="#f24a0c" opacity="0.55"/>
+    <g fill="#111114">
+      <rect x="820" y="520" width="26" height="130" rx="13"/>
+      <rect x="880" y="500" width="26" height="150" rx="13"/>
+      <rect x="1010" y="505" width="26" height="145" rx="13"/>
+      <rect x="1070" y="525" width="26" height="125" rx="13"/>
+      <circle cx="833" cy="505" r="20"/>
+      <circle cx="893" cy="485" r="20"/>
+      <circle cx="1023" cy="490" r="20"/>
+      <circle cx="1083" cy="510" r="20"/>
+    </g>
+  </g>
+
+  <g fill="#050506">
+    <path d="M-20 1080 L-20 880 C 120 830 240 900 360 870 C 500 835 620 905 760 875 C 900 845 1000 900 1140 870 C 1300 835 1400 900 1560 870 C 1700 845 1840 890 1940 860 L1940 1080 Z" opacity="0.97"/>
+    <path d="M-20 1080 L-20 960 C 160 910 300 980 480 945 C 640 915 760 985 940 950 C 1120 915 1260 985 1440 950 C 1620 915 1780 975 1940 940 L1940 1080 Z"/>
+  </g>
+
+  <g fill="#0d0d10" opacity="0.99">
+    <circle cx="140" cy="930" r="58"/>
+    <circle cx="330" cy="980" r="66"/>
+    <circle cx="520" cy="930" r="54"/>
+    <circle cx="700" cy="990" r="64"/>
+    <circle cx="890" cy="935" r="58"/>
+    <circle cx="1080" cy="985" r="66"/>
+    <circle cx="1270" cy="930" r="54"/>
+    <circle cx="1460" cy="990" r="64"/>
+    <circle cx="1650" cy="930" r="58"/>
+    <circle cx="1830" cy="980" r="66"/>
+  </g>
+
+  <g fill="#1a1a1f" opacity="0.95">
+    <circle cx="230" cy="1040" r="70"/>
+    <circle cx="440" cy="1060" r="64"/>
+    <circle cx="630" cy="1030" r="60"/>
+    <circle cx="820" cy="1055" r="72"/>
+    <circle cx="1010" cy="1030" r="62"/>
+    <circle cx="1200" cy="1060" r="70"/>
+    <circle cx="1390" cy="1035" r="60"/>
+    <circle cx="1580" cy="1055" r="70"/>
+    <circle cx="1770" cy="1035" r="60"/>
+  </g>
+
+  <g stroke="#ffb27a" stroke-width="2" opacity="0.5">
+    <path d="M250 970 C 350 930 450 1010 560 965"/>
+    <path d="M700 1000 C 790 950 890 1020 990 975"/>
+    <path d="M1250 975 C 1340 930 1440 1005 1540 960"/>
+  </g>
+
+  <g fill="#ffb27a" opacity="0.5">
+    <circle cx="600" cy="760" r="2"/>
+    <circle cx="900" cy="720" r="2.4"/>
+    <circle cx="1280" cy="750" r="2"/>
+    <circle cx="1500" cy="700" r="1.8"/>
+    <circle cx="430" cy="730" r="1.6"/>
+    <circle cx="1100" cy="690" r="1.6"/>
+  </g>
+
+  <rect width="1920" height="1080" fill="url(#stageGlow)" opacity="0.55" style="mix-blend-mode:screen"/>
+</svg>
