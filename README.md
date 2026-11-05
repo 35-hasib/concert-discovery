@@ -98,13 +98,6 @@ If PostgreSQL is not already running, start the local development instance from 
 
 The seed script reads these values from `backend/.env`:
 
-```text
-Email:    admin@concertdiscovery.com
-Password: Admin@12345
-```
-
-Change `ADMIN_EMAIL` and `ADMIN_PASSWORD` before running the seed, and change the password before deploying.
-
 ## Environment variables
 
 ### `backend/.env`
