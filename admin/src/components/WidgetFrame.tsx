@@ -33,7 +33,7 @@ export function WidgetFrame({
       if (!data || data.type !== "cd-widget-height" || typeof data.height !== "number") {
         return;
       }
-      const next = Math.max(240, Math.min(12000, Math.ceil(data.height) + 8));
+      const next = Math.max(240, Math.min(60000, Math.ceil(data.height) + 8));
       setHeight(next);
     }
     window.addEventListener("message", onMessage);
@@ -43,7 +43,7 @@ export function WidgetFrame({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-2xl border border-ink-950/[0.08] bg-white",
+        "relative overflow-hidden rounded-[3px] border border-[#e5e5e5] bg-white",
         className
       )}
     >

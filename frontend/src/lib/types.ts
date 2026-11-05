@@ -48,6 +48,7 @@ export type Blog = {
   artistName: string;
   tourName: string;
   genre: string;
+  tourYear: number | null;
   tourStartDate: string | null;
   tourEndDate: string | null;
   featuredImage: string;
@@ -59,6 +60,10 @@ export type Blog = {
   content: string;
   widgetEnabled: boolean;
   widgetCode: string;
+  scheduleArtistQuery: string;
+  scheduleEndDate: string | null;
+  scheduleAffiliateUrl: string;
+  schedulePerPage: number;
   metaTitle: string;
   metaDescription: string;
   seoKeywords: string;

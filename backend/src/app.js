@@ -19,6 +19,7 @@ const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173,http:/
   .filter(Boolean);
 
 app.disable("x-powered-by");
+app.use("/embed/widget", widgetRoutes);
 app.use(
   cors({
     origin(origin, callback) {
@@ -39,7 +40,6 @@ app.use((_req, res, next) => {
 
 app.use(mediaRoutes);
 app.use(contentRoutes);
-app.use("/embed/widget", widgetRoutes);
 app.use("/api/blogs", blogRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/auth", authRoutes);

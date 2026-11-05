@@ -6,6 +6,7 @@ import { asyncHandler, first, HttpError, toPositiveInt } from "../http.js";
 import { authRequired } from "../middleware/auth.js";
 import { prisma } from "../prisma.js";
 import { blogData } from "../services/admin-blogs.js";
+import { buildTicketNetworkWidgetCode } from "../services/ticketnetwork.js";
 import { buildWidgetDocument } from "../services/widget.js";
 import { saveImage } from "../services/upload.js";
 import { serializeBlog, serializeSettings } from "../utils.js";
@@ -204,7 +205,18 @@ router.post(
   asyncHandler(async (req, res) => {
     const { data, errors } = validate(widgetPreviewSchema, req.body);
     if (!data) throw new HttpError(422, "Check the highlighted fields.", errors);
-    res.json({ html: buildWidgetDocument(data.code, data.title) });
+    let code = data.code;
+    if (!code.trim() && data.scheduleArtistQuery.trim()) {
+      code = buildTicketNetworkWidgetCode({
+        blogId: data.blogId,
+        artistQuery: data.scheduleArtistQuery,
+        endDate: data.scheduleEndDate,
+        affiliateUrl: data.scheduleAffiliateUrl,
+        perPage: data.schedulePerPage,
+      });
+    }
+    if (!code.trim()) throw new HttpError(422, "Add an artist search query or widget code.");
+    res.json({ html: buildWidgetDocument(code, data.title) });
   })
 );
 

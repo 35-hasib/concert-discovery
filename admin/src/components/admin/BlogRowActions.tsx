@@ -1,5 +1,6 @@
 import {
   AlertTriangle,
+  ExternalLink,
   Eye,
   EyeOff,
   Loader2,
@@ -74,6 +75,15 @@ export function BlogRowActions({
       ) : null}
 
       <Link
+        to={`/preview/${id}`}
+        className="btn-icon"
+        title="Preview blog"
+        aria-label={`Preview ${title}`}
+      >
+        <ExternalLink className="h-4 w-4" />
+      </Link>
+
+      <Link
         to={`/blogs/${id}/edit`}
         className="btn-icon"
         title="Edit blog"
@@ -138,14 +148,14 @@ export function BlogRowActions({
             role="dialog"
             aria-modal="true"
             aria-labelledby={`delete-title-${id}`}
-            className="relative w-full max-w-md rounded-2xl border border-ink-950/10 bg-white p-6 shadow-2xl"
+            className="relative w-full max-w-md rounded-[3px] border border-[#e5e5e5] bg-white p-6 shadow-2xl"
           >
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-red-600">
               <AlertTriangle className="h-5 w-5" />
             </div>
             <h2
               id={`delete-title-${id}`}
-              className="mt-4 font-display text-2xl font-bold uppercase text-ink-950"
+              className="mt-4 font-display text-2xl font-normal uppercase text-[#535353]"
             >
               Delete this blog?
             </h2>

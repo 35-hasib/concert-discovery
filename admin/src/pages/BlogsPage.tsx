@@ -93,7 +93,7 @@ export function BlogsPage() {
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-ember-600">
             Content library
           </p>
-          <h2 className="mt-1 font-display text-3xl font-bold uppercase leading-none tracking-tight text-ink-950">
+          <h2 className="mt-1 font-display text-[32px] font-normal uppercase leading-none text-[#535353]">
             All blogs
           </h2>
           <p className="mt-2 text-sm text-ink-600">
@@ -110,7 +110,7 @@ export function BlogsPage() {
           <Link
             key={stat.label}
             to={stat.href}
-            className="flex items-center gap-3 rounded-2xl border border-ink-950/[0.07] bg-white px-4 py-3.5 shadow-sm transition hover:-translate-y-0.5 hover:border-ember-500/30 hover:shadow-card"
+            className="flex items-center gap-3 rounded-[3px] border border-[#e5e5e5] bg-white px-4 py-3.5 transition hover:-translate-y-0.5 hover:border-ember-500 hover:shadow-[0_10px_28px_rgba(0,0,0,0.09)]"
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-ember-50 text-ember-600">
               <stat.icon className="h-4 w-4" />
@@ -132,7 +132,7 @@ export function BlogsPage() {
       <section className="admin-card overflow-hidden p-0">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink-950/[0.06] px-5 py-4">
           <div>
-            <h3 className="font-display text-lg font-bold uppercase text-ink-950">
+            <h3 className="font-display text-[22px] font-normal uppercase text-[#535353]">
               {hasFilters ? "Filtered results" : "Tour announcements"}
             </h3>
             <p className="text-[11px] text-ink-600">
@@ -219,7 +219,7 @@ export function BlogsPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3.5">
-                        <span className="inline-flex rounded-full bg-ink-950/[0.04] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-ink-700">
+                        <span className="inline-flex rounded-[2px] bg-[#f5f5f5] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#535353]">
                           {blog.genre}
                         </span>
                       </td>
@@ -272,7 +272,7 @@ export function BlogsPage() {
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-ember-50 text-ember-600">
               {hasFilters ? <SearchX className="h-6 w-6" /> : <FileText className="h-6 w-6" />}
             </span>
-            <h3 className="mt-4 font-display text-2xl font-bold uppercase text-ink-950">
+            <h3 className="mt-4 font-display text-2xl font-normal uppercase text-[#535353]">
               {hasFilters ? "No matching blogs" : "No blogs yet"}
             </h3>
             <p className="mt-2 max-w-md text-sm text-ink-600">

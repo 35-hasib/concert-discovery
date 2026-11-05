@@ -63,6 +63,14 @@ export function EditBlogPage() {
     artistName: blog.artistName,
     tourName: blog.tourName,
     genre: blog.genre,
+    tourYear:
+      blog.tourYear != null
+        ? String(blog.tourYear)
+        : String(
+            new Date(
+              blog.tourStartDate || blog.publishedAt || Date.now()
+            ).getUTCFullYear()
+          ),
     tourStartDate: dateOnly(blog.tourStartDate),
     tourEndDate: dateOnly(blog.tourEndDate),
     featuredImage: blog.featuredImage,
@@ -74,6 +82,10 @@ export function EditBlogPage() {
     content: blog.content,
     widgetEnabled: blog.widgetEnabled,
     widgetCode: blog.widgetCode,
+    scheduleArtistQuery: blog.scheduleArtistQuery,
+    scheduleEndDate: dateOnly(blog.scheduleEndDate),
+    scheduleAffiliateUrl: blog.scheduleAffiliateUrl,
+    schedulePerPage: blog.schedulePerPage,
     metaTitle: blog.metaTitle,
     metaDescription: blog.metaDescription,
     seoKeywords: blog.seoKeywords,

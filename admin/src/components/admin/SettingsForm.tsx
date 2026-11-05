@@ -1,8 +1,9 @@
-import { AlertCircle, Check, Globe2, Save, Share2, Sparkles } from "lucide-react";
+import { AlertCircle, Globe2, Save, Share2, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 import { ApiError, api, assetUrl, errorMessage, siteUrl } from "../../lib/api";
 import { SOCIAL_PLATFORMS } from "../../lib/constants";
+import { showAdminToast } from "../../lib/toast";
 import type { SiteSettings } from "../../lib/types";
 import { settingsSchema } from "../../lib/validation";
 import { Spinner } from "../Spinner";
@@ -12,12 +13,10 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
   const [form, setForm] = useState<SiteSettings>(initial);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState("");
-  const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
 
   function set<K extends keyof SiteSettings>(key: K, value: SiteSettings[K]) {
     setForm((current) => ({ ...current, [key]: value }));
-    setSaved(false);
     setErrors((current) => {
       if (!current[key]) return current;
       const next = { ...current };
@@ -31,7 +30,6 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
       ...current,
       socialLinks: { ...current.socialLinks, [key]: value },
     }));
-    setSaved(false);
     setErrors((current) => {
       const next = { ...current };
       delete next[`socialLinks.${key}`];
@@ -42,7 +40,6 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError("");
-    setSaved(false);
 
     const parsed = settingsSchema.safeParse(form);
     if (!parsed.success) {
@@ -64,9 +61,8 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
       });
       setForm(data.settings);
       setErrors({});
-      setSaved(true);
+      showAdminToast({ message: "Settings saved successfully." });
       window.dispatchEvent(new Event("cd-admin:settings-updated"));
-      window.setTimeout(() => setSaved(false), 4000);
     } catch (saveError) {
       if (saveError instanceof ApiError && saveError.fieldErrors) {
         setErrors(saveError.fieldErrors);
@@ -84,7 +80,7 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-ember-600">
             Site configuration
           </p>
-          <h2 className="mt-1 font-display text-3xl font-bold uppercase leading-none tracking-tight text-ink-950">
+          <h2 className="mt-1 font-display text-[32px] font-normal uppercase leading-none text-[#535353]">
             Website settings
           </h2>
           <p className="mt-2 text-sm text-ink-600">
@@ -107,21 +103,12 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
         </div>
       ) : null}
 
-      {saved ? (
-        <div
-          className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
-          role="status"
-        >
-          <Check className="h-4 w-4" /> Settings saved and public site updated.
-        </div>
-      ) : null}
-
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-6">
           <section className="admin-card">
             <div className="flex items-center gap-2">
               <Globe2 className="h-4 w-4 text-ember-600" />
-              <h3 className="font-display text-xl font-bold uppercase text-ink-950">General</h3>
+              <h3 className="font-display text-xl font-normal uppercase text-[#535353]">General</h3>
             </div>
             <div className="mt-5 space-y-5">
               <div>
@@ -186,7 +173,7 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
           <section className="admin-card">
             <div className="flex items-center gap-2">
               <Share2 className="h-4 w-4 text-ember-600" />
-              <h3 className="font-display text-xl font-bold uppercase text-ink-950">
+              <h3 className="font-display text-xl font-normal uppercase text-[#535353]">
                 Social media
               </h3>
             </div>
@@ -217,7 +204,7 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
           <section className="admin-card">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-ember-600" />
-              <h3 className="font-display text-xl font-bold uppercase text-ink-950">
+              <h3 className="font-display text-xl font-normal uppercase text-[#535353]">
                 Default SEO
               </h3>
             </div>
@@ -263,7 +250,7 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
         <aside className="space-y-6">
           <div className="xl:sticky xl:top-24 xl:space-y-6">
             <section className="admin-card">
-              <h3 className="font-display text-lg font-bold uppercase text-ink-950">
+              <h3 className="font-display text-lg font-normal uppercase text-[#535353]">
                 Brand assets
               </h3>
               <div className="mt-4 space-y-5">
@@ -284,7 +271,7 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
               </div>
             </section>
 
-            <section className="rounded-2xl border border-ink-950/[0.07] bg-ink-950 p-5 text-white">
+            <section className="rounded-[3px] border border-[#333333] bg-[#222222] p-5 text-white">
               <p className="font-display text-lg font-bold uppercase leading-none">
                 Live brand preview
               </p>
@@ -316,7 +303,7 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
             </section>
 
             <section className="admin-card">
-              <h3 className="font-display text-lg font-bold uppercase text-ink-950">
+              <h3 className="font-display text-lg font-normal uppercase text-[#535353]">
                 SEO preview
               </h3>
               <div className="mt-3 rounded-xl border border-ink-950/[0.08] bg-white p-3">

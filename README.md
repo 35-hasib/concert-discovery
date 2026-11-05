@@ -177,12 +177,14 @@ Existing records are not overwritten when the seed is rerun. Replace the demo po
 
 ## Widget integration
 
-Each blog can include a complete TicketNetwork embed containing HTML, CSS and `<script>` tags.
+Each blog drives its own TicketNetwork schedule from structured settings; raw embed code is optional.
 
 1. In the admin editor, enable **Concert schedule**.
-2. Paste the complete embed code supplied by TicketNetwork.
-3. Preview the widget and save or publish the post.
-4. The public page loads the widget from `GET /embed/widget/:slug` inside an iframe.
+2. Enter the artist/performer search query. Optionally set an end date, affiliate URL and events per page; the site default affiliate is used when the URL is blank.
+3. Preview the widget and save or publish the post. The public page loads the schedule from `GET /embed/widget/:slug` inside an iframe.
+4. To use a complete TicketNetwork embed instead, paste it into **Paste full TicketNetwork embed code**. A pasted embed is used exactly as supplied and takes priority over the generated schedule settings.
+
+Generated schedules use a container id derived from the blog id, so every tour gets an isolated widget and filter state. Legacy TicketNetwork embeds continue to work, and their artist, date, affiliate and page size are derived automatically when the post is opened in the admin editor.
 
 The iframe uses `sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms allow-modals allow-downloads"` without `allow-same-origin`. The widget document includes a CSP that permits the required TicketNetwork assets while keeping third-party scripts isolated from both app origins.
 

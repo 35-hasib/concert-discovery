@@ -18,7 +18,7 @@ export function TableOfContents({
     <nav
       aria-label="Table of contents"
       className={cn(
-        "rounded-2xl border border-ink-950/[0.07] bg-white",
+        "rounded-[3px] border border-[#e5e5e5] bg-white",
         compact ? "p-4" : "p-5",
         className
       )}

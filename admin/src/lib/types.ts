@@ -27,6 +27,17 @@ export type SiteSettings = {
 
 export type BlogStatus = "DRAFT" | "PUBLISHED";
 
+export type ScheduleSummary = {
+  concertsRemaining: number;
+  totalConcerts: number;
+  nextConcert: {
+    city: string;
+    date: string;
+    venue: string;
+  } | null;
+  source: "widget" | "tour" | "none";
+};
+
 export type TourAlbum = {
   title: string;
   year: string;
@@ -43,6 +54,7 @@ export type Blog = {
   artistName: string;
   tourName: string;
   genre: string;
+  tourYear: number | null;
   tourStartDate: string | null;
   tourEndDate: string | null;
   featuredImage: string;
@@ -54,6 +66,10 @@ export type Blog = {
   content: string;
   widgetEnabled: boolean;
   widgetCode: string;
+  scheduleArtistQuery: string;
+  scheduleEndDate: string | null;
+  scheduleAffiliateUrl: string;
+  schedulePerPage: number;
   metaTitle: string;
   metaDescription: string;
   seoKeywords: string;
@@ -63,6 +79,7 @@ export type Blog = {
   createdAt: string;
   updatedAt: string;
   readingTime: number;
+  scheduleSummary: ScheduleSummary;
 };
 
 export type BlogListResult = {

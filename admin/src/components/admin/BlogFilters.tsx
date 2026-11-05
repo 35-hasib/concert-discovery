@@ -41,7 +41,7 @@ export function BlogFilters({
   const hasFilters = Boolean(q.trim() || status || genre);
 
   return (
-    <div className="relative rounded-2xl border border-ink-950/[0.07] bg-white p-4 shadow-sm">
+    <div className="relative rounded-[3px] border border-[#e5e5e5] bg-white p-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
         <form
           onSubmit={(event) => {

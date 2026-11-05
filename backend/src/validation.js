@@ -11,6 +11,11 @@ const optionalDate = z
     return Number.isNaN(date.getTime()) ? null : date.toISOString();
   });
 
+const optionalYear = z.preprocess(
+  (value) => (value === "" || value === undefined ? null : value),
+  z.coerce.number().int().min(1900, "Enter a valid tour year").max(2100, "Enter a valid tour year").nullable()
+);
+
 const stringList = (maxItems, maxLength) =>
   z
     .array(z.string().max(maxLength))
@@ -45,6 +50,7 @@ export const blogSchema = z
     artistName: z.string().trim().min(1, "Artist name is required").max(160, "Artist name is too long"),
     tourName: z.string().trim().max(200, "Tour name is too long").default(""),
     genre: z.enum(GENRES),
+    tourYear: optionalYear,
     tourStartDate: optionalDate,
     tourEndDate: optionalDate,
     featuredImage: z.string().trim().max(1000).default(""),
@@ -60,6 +66,18 @@ export const blogSchema = z
     content: z.string().min(1, "Blog content is required").max(500_000, "Blog content is too large"),
     widgetEnabled: z.boolean().default(false),
     widgetCode: z.string().max(500_000, "Widget code is too large").default(""),
+    scheduleArtistQuery: z.string().trim().max(160, "Artist search query is too long").default(""),
+    scheduleEndDate: optionalDate,
+    scheduleAffiliateUrl: z
+      .string()
+      .trim()
+      .max(2000, "Affiliate URL is too long")
+      .refine(
+        (value) => !value || /^https?:\/\//i.test(value) || /^\/\//.test(value),
+        "Enter a valid http(s) affiliate URL"
+      )
+      .default(""),
+    schedulePerPage: z.coerce.number().int().min(1, "Show at least 1 event per page").max(100, "Show at most 100 events per page").default(24),
     metaTitle: z.string().trim().max(200).default(""),
     metaDescription: z.string().trim().max(400).default(""),
     seoKeywords: z.string().trim().max(600).default(""),
@@ -71,11 +89,11 @@ export const blogSchema = z
     if (value.status === "PUBLISHED" && !value.content.trim()) {
       ctx.addIssue({ code: "custom", path: ["content"], message: "Published posts require article content" });
     }
-    if (value.widgetEnabled && !value.widgetCode.trim()) {
+    if (value.widgetEnabled && !value.scheduleArtistQuery.trim() && !value.widgetCode.trim()) {
       ctx.addIssue({
         code: "custom",
-        path: ["widgetCode"],
-        message: "Add widget code or turn off the concert schedule toggle",
+        path: ["scheduleArtistQuery"],
+        message: "Add an artist search query or advanced widget code",
       });
     }
     if (value.tourStartDate && value.tourEndDate && new Date(value.tourEndDate) < new Date(value.tourStartDate)) {
@@ -123,6 +141,11 @@ export const settingsSchema = z.object({
 export const widgetPreviewSchema = z.object({
   title: z.string().trim().max(200).default("Concert Schedule"),
   code: z.string().max(500_000).default(""),
+  blogId: z.string().trim().max(120).default("preview"),
+  scheduleArtistQuery: z.string().trim().max(160).default(""),
+  scheduleEndDate: optionalDate,
+  scheduleAffiliateUrl: z.string().trim().max(2000).default(""),
+  schedulePerPage: z.coerce.number().int().min(1).max(100).default(24),
 });
 
 export function formatZodErrors(error) {

@@ -25,6 +25,7 @@ model Blog {
   artistName    String    @default("")
   tourName      String    @default("")
   genre         String    @default("Other")
+  tourYear      Int?
   tourStartDate DateTime?
   tourEndDate   DateTime?
   featuredImage String    @default("")
@@ -34,8 +35,12 @@ model Blog {
   albums        String    @default("[]")
   tourCities    String    @default("[]")
   content       String    @default("")
-  widgetEnabled Boolean   @default(false)
-  widgetCode    String    @default("")
+  widgetEnabled       Boolean   @default(false)
+  widgetCode          String    @default("")
+  scheduleArtistQuery String    @default("")
+  scheduleEndDate     DateTime?
+  scheduleAffiliateUrl String   @default("")
+  schedulePerPage     Int       @default(24)
   metaTitle     String    @default("")
   metaDescription String  @default("")
   seoKeywords   String    @default("")

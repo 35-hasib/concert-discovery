@@ -18,10 +18,10 @@ import { Link, useParams } from "react-router-dom";
 import { BlogCard } from "../components/BlogCard";
 import { ShareButtons } from "../components/ShareButtons";
 import { Spinner } from "../components/Spinner";
-import { WidgetFrame } from "../components/WidgetFrame";
+import { ConcertSchedule, hasConcertSchedule } from "../components/ConcertSchedule";
 import { useSiteSettings } from "../context/SettingsContext";
 import { useSeo } from "../hooks/useSeo";
-import { absoluteUrl, api, ApiError, assetUrl, widgetUrl } from "../lib/api";
+import { absoluteUrl, api, ApiError, assetUrl } from "../lib/api";
 import { prepareArticle } from "../lib/sanitize";
 import type { BlogDetailResult } from "../lib/types";
 import { cn, formatDate, formatDateRange, stripHtml } from "../lib/utils";
@@ -63,7 +63,7 @@ export function TourDetailPage() {
   const publishedDate = blog ? blog.publishedAt || blog.createdAt : null;
   const articleUrl = absoluteUrl(`/tours/${slug}`);
   const image = blog?.featuredImage ? absoluteUrl(blog.featuredImage) : absoluteUrl("/icon.svg");
-  const hasWidget = Boolean(blog?.widgetEnabled && blog.widgetCode.trim());
+  const hasWidget = Boolean(blog && hasConcertSchedule(blog));
   const relatedTours = useMemo(() => {
     const seen = new Set<string>();
     if (blog) seen.add(blog.id);
@@ -227,30 +227,17 @@ export function TourDetailPage() {
   }
 
   const tourWindow = formatDateRange(blog.tourStartDate, blog.tourEndDate);
-  const tourYear = blog.tourStartDate
-    ? new Date(blog.tourStartDate).getUTCFullYear()
-    : new Date(publishedDate || blog.createdAt).getUTCFullYear();
+  const tourYear =
+    blog.tourYear ??
+    (blog.tourStartDate
+      ? new Date(blog.tourStartDate).getUTCFullYear()
+      : new Date(publishedDate || blog.createdAt).getUTCFullYear());
   const hasTourNotes = blog.supportingArtists.length > 0 || Boolean(blog.previousTour);
   const primaryAlbum = blog.albums[0];
 
   return (
     <div className="container-page bg-white px-5 pb-12 pt-5">
-      <nav
-        className="flex flex-wrap items-center gap-1.5 rounded-[2px] bg-[#f5f5f5] px-[15px] py-2 text-[11px] text-[#888888]"
-        aria-label="Breadcrumb"
-      >
-        <Link to="/" className="transition hover:text-ember-600">
-          Home
-        </Link>
-        <ChevronRight className="h-3 w-3 text-[#bbbbbb]" />
-        <Link to="/tours" className="transition hover:text-ember-600">
-          All Artists
-        </Link>
-        <ChevronRight className="h-3 w-3 text-[#bbbbbb]" />
-        <span className="line-clamp-1 text-[#555555]">{blog.artistName}</span>
-      </nav>
-
-      <div className="mt-5 grid gap-[30px] lg:grid-cols-[minmax(0,1fr)_370px]">
+      <div className="grid gap-[30px] lg:grid-cols-[minmax(0,1fr)_370px]">
         <article id="content" className="min-w-0">
           <header>
             <h1 className="font-display text-[36px] uppercase leading-none text-[#535353] sm:text-[38px]">
@@ -360,18 +347,12 @@ export function TourDetailPage() {
                   Browse upcoming dates and follow official ticket links to secure your seats.
                 </p>
               </div>
-              {tourWindow ? (
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-ember-600">
-                  <CalendarDays className="h-3.5 w-3.5" /> {tourWindow}
-                </span>
-              ) : null}
             </div>
             <div className="rule-accent mt-2" />
             <div className="mt-4">
               {hasWidget ? (
-                <WidgetFrame
-                  src={widgetUrl(blog.slug)}
-                  title={`${blog.title} concert schedule`}
+                <ConcertSchedule
+                  blog={blog}
                   className="rounded-[3px] border-[#dddddd]"
                 />
               ) : (

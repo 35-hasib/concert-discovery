@@ -45,12 +45,12 @@ export function Pagination({
       {currentPage > 1 ? (
         <Link
           to={pageHref(basePath, params, currentPage - 1)}
-          className="flex h-9 items-center gap-1.5 rounded-full border border-ink-950/10 bg-white px-3.5 text-xs font-semibold text-ink-700 transition hover:border-ink-950/30"
+          className="flex h-10 items-center gap-1.5 rounded-[3px] border border-[#dddddd] bg-white px-4 text-xs font-semibold text-[#535353] transition hover:border-ember-500 hover:text-ember-600"
         >
           <ChevronLeft className="h-4 w-4" /> Prev
         </Link>
       ) : (
-        <span className="flex h-9 items-center gap-1.5 rounded-full border border-ink-950/5 px-3.5 text-xs font-semibold text-ink-600/40">
+        <span className="flex h-10 items-center gap-1.5 rounded-[3px] border border-[#eeeeee] px-4 text-xs font-semibold text-[#bbbbbb]">
           <ChevronLeft className="h-4 w-4" /> Prev
         </span>
       )}
@@ -66,10 +66,10 @@ export function Pagination({
             to={pageHref(basePath, params, page)}
             aria-current={page === currentPage ? "page" : undefined}
             className={cn(
-              "flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold transition",
+              "flex h-10 w-10 items-center justify-center rounded-[3px] text-xs font-bold transition",
               page === currentPage
-                ? "bg-ink-950 text-white"
-                : "border border-ink-950/10 bg-white text-ink-700 hover:border-ink-950/30"
+                ? "bg-ember-500 text-white"
+                : "border border-[#dddddd] bg-white text-[#535353] hover:border-ember-500 hover:text-ember-600"
             )}
           >
             {page}
@@ -80,12 +80,12 @@ export function Pagination({
       {currentPage < totalPages ? (
         <Link
           to={pageHref(basePath, params, currentPage + 1)}
-          className="flex h-9 items-center gap-1.5 rounded-full border border-ink-950/10 bg-white px-3.5 text-xs font-semibold text-ink-700 transition hover:border-ink-950/30"
+          className="flex h-10 items-center gap-1.5 rounded-[3px] border border-[#dddddd] bg-white px-4 text-xs font-semibold text-[#535353] transition hover:border-ember-500 hover:text-ember-600"
         >
           Next <ChevronRight className="h-4 w-4" />
         </Link>
       ) : (
-        <span className="flex h-9 items-center gap-1.5 rounded-full border border-ink-950/5 px-3.5 text-xs font-semibold text-ink-600/40">
+        <span className="flex h-10 items-center gap-1.5 rounded-[3px] border border-[#eeeeee] px-4 text-xs font-semibold text-[#bbbbbb]">
           Next <ChevronRight className="h-4 w-4" />
         </span>
       )}

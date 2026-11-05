@@ -11,6 +11,11 @@ const optionalDate = z
     return Number.isNaN(date.getTime()) ? null : date.toISOString();
   });
 
+const optionalYear = z.preprocess(
+  (value) => (value === "" || value === undefined ? null : value),
+  z.coerce.number().int().min(1900, "Enter a valid tour year").max(2100, "Enter a valid tour year").nullable()
+);
+
 const stringList = (maxItems: number, maxLength: number) =>
   z
     .array(z.string().max(maxLength))
@@ -44,6 +49,7 @@ export const blogSchema = z
       .max(160, "Artist name is too long"),
     tourName: z.string().trim().max(200, "Tour name is too long").default(""),
     genre: z.enum(GENRES),
+    tourYear: optionalYear,
     tourStartDate: optionalDate,
     tourEndDate: optionalDate,
     featuredImage: z.string().trim().max(1000).default(""),
@@ -59,6 +65,27 @@ export const blogSchema = z
     content: z.string().min(1, "Blog content is required").max(500_000, "Blog content is too large"),
     widgetEnabled: z.boolean().default(false),
     widgetCode: z.string().max(500_000, "Widget code is too large").default(""),
+    scheduleArtistQuery: z
+      .string()
+      .trim()
+      .max(160, "Artist search query is too long")
+      .default(""),
+    scheduleEndDate: optionalDate,
+    scheduleAffiliateUrl: z
+      .string()
+      .trim()
+      .max(2000, "Affiliate URL is too long")
+      .refine(
+        (value) => !value || /^https?:\/\//i.test(value) || /^\/\//.test(value),
+        "Enter a valid http(s) affiliate URL"
+      )
+      .default(""),
+    schedulePerPage: z.coerce
+      .number()
+      .int()
+      .min(1, "Show at least 1 event per page")
+      .max(100, "Show at most 100 events per page")
+      .default(24),
     metaTitle: z.string().trim().max(200).default(""),
     metaDescription: z.string().trim().max(400).default(""),
     seoKeywords: z.string().trim().max(600).default(""),
@@ -78,7 +105,7 @@ export const blogSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["widgetCode"],
-        message: "Add widget code or turn off the concert schedule toggle",
+        message: "Add the TicketNetwork widget code",
       });
     }
     if (value.tourStartDate && value.tourEndDate) {

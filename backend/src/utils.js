@@ -1,3 +1,5 @@
+import { extractTicketNetworkSettings, schedulePerPageValue } from "./services/ticketnetwork.js";
+
 export function slugify(value) {
   return value
     .toLowerCase()
@@ -173,12 +175,18 @@ export function buildScheduleSummary(blog) {
 }
 
 export function serializeBlog(blog) {
+  const extracted = !blog.scheduleArtistQuery ? extractTicketNetworkSettings(blog.widgetCode) : null;
+  const extractedEndDate = extracted?.endDate ? new Date(`${extracted.endDate}T00:00:00.000Z`) : null;
   return {
     ...blog,
     additionalImages: parseAdditionalImages(blog.additionalImages),
     supportingArtists: parseStringList(blog.supportingArtists),
     albums: parseAlbums(blog.albums),
     tourCities: parseStringList(blog.tourCities),
+    scheduleArtistQuery: blog.scheduleArtistQuery || extracted?.artistQuery || "",
+    scheduleEndDate: blog.scheduleEndDate || extractedEndDate,
+    scheduleAffiliateUrl: blog.scheduleAffiliateUrl || extracted?.affiliateUrl || "",
+    schedulePerPage: schedulePerPageValue(blog.schedulePerPage || extracted?.perPage || 24),
     readingTime: readingTime(blog.content),
     scheduleSummary: buildScheduleSummary(blog),
   };

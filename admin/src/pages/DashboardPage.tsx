@@ -86,7 +86,7 @@ export function DashboardPage() {
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-ember-600">
             Overview
           </p>
-          <h2 className="mt-1 font-display text-3xl font-bold uppercase leading-none tracking-tight text-ink-950">
+          <h2 className="mt-1 font-display text-[32px] font-normal uppercase leading-none text-[#535353]">
             Welcome back, {firstName}
           </h2>
           <p className="mt-2 text-sm text-ink-600">
@@ -120,10 +120,10 @@ export function DashboardPage() {
               <Link
                 key={stat.label}
                 to={stat.href}
-                className={`group relative overflow-hidden rounded-2xl border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-card ${
+                className={`group relative overflow-hidden rounded-[3px] border p-5 transition hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(0,0,0,0.09)] ${
                   stat.dark
-                    ? "border-ink-950 bg-ink-950 text-white"
-                    : "border-ink-950/[0.07] bg-white"
+                    ? "border-[#333333] bg-[#222222] text-white"
+                    : "border-[#e5e5e5] bg-white"
                 }`}
               >
                 <div className="flex items-start justify-between">
@@ -158,7 +158,7 @@ export function DashboardPage() {
             <section className="admin-card p-0">
               <div className="flex items-center justify-between gap-3 border-b border-ink-950/[0.06] px-5 py-4">
                 <div>
-                  <h3 className="font-display text-lg font-bold uppercase text-ink-950">
+                  <h3 className="font-display text-[22px] font-normal uppercase text-[#535353]">
                     Recently updated
                   </h3>
                   <p className="text-[11px] text-ink-600">The latest edits across your library</p>
@@ -229,7 +229,7 @@ export function DashboardPage() {
 
             <div className="space-y-6">
               <section className="admin-card">
-                <h3 className="flex items-center gap-2 font-display text-lg font-bold uppercase text-ink-950">
+                <h3 className="flex items-center gap-2 font-display text-[22px] font-normal uppercase text-[#535353]">
                   <Sparkles className="h-4 w-4 text-ember-600" /> Quick actions
                 </h3>
                 <div className="mt-4 space-y-2">
@@ -275,10 +275,10 @@ export function DashboardPage() {
                 </div>
               </section>
 
-              <section className="relative overflow-hidden rounded-2xl bg-ink-950 p-6 text-white">
+              <section className="relative overflow-hidden rounded-[3px] bg-[#222222] p-6 text-white">
                 <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-ember-500/25 blur-2xl" />
                 <TrendingUp className="h-6 w-6 text-ember-400" />
-                <h3 className="mt-4 font-display text-2xl font-bold uppercase leading-none">
+                <h3 className="mt-4 font-display text-2xl font-normal uppercase leading-none">
                   Keep the lineup fresh
                 </h3>
                 <p className="mt-2 text-xs leading-relaxed text-white/55">
