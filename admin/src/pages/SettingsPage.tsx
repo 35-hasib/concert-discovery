@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { AdminAccountForm } from "../components/admin/AdminAccountForm";
 import { SettingsForm } from "../components/admin/SettingsForm";
 import { SpinnerBlock } from "../components/Spinner";
 import { api, errorMessage } from "../lib/api";
@@ -55,5 +56,10 @@ export function SettingsPage() {
     );
   }
 
-  return <SettingsForm initial={settings} />;
+  return (
+    <div className="space-y-6">
+      <SettingsForm initial={settings} />
+      <AdminAccountForm />
+    </div>
+  );
 }

@@ -16,6 +16,7 @@ type AuthValue = {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  updateSession: (token: string, admin: AdminUser) => void;
 };
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -91,8 +92,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }
 
+  function updateSession(token: string, admin: AdminUser) {
+    setToken(token);
+    localStorage.setItem(USER_KEY, JSON.stringify(admin));
+    setUser(admin);
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, updateSession }}>
       {children}
     </AuthContext.Provider>
   );

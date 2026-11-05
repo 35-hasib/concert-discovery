@@ -4,7 +4,7 @@ import { Router } from "express";
 import { asyncHandler, HttpError } from "../http.js";
 import { authRequired, publicAdmin, signToken } from "../middleware/auth.js";
 import { prisma } from "../prisma.js";
-import { loginSchema, validate } from "../validation.js";
+import { adminAccountSchema, loginSchema, validate } from "../validation.js";
 
 const router = Router();
 
@@ -51,6 +51,45 @@ router.get(
   authRequired,
   asyncHandler(async (req, res) => {
     res.json({ admin: req.admin });
+  })
+);
+
+router.put(
+  "/account",
+  authRequired,
+  asyncHandler(async (req, res) => {
+    const { data, errors } = validate(adminAccountSchema, req.body);
+    if (!data) throw new HttpError(422, "Check the highlighted fields.", errors);
+
+    const admin = await prisma.admin.findUnique({ where: { id: req.admin.sub } });
+    if (!admin) throw new HttpError(404, "Account not found.");
+
+    const valid = await bcrypt.compare(data.currentPassword, admin.passwordHash);
+    if (!valid) {
+      throw new HttpError(422, "Current password is incorrect.", {
+        currentPassword: "Current password is incorrect.",
+      });
+    }
+
+    const email = data.email.toLowerCase();
+    const existing = await prisma.admin.findUnique({ where: { email } });
+    if (existing && existing.id !== admin.id) {
+      throw new HttpError(422, "That email is already in use.", {
+        email: "That email is already in use.",
+      });
+    }
+
+    const values = { email };
+    if (data.newPassword) {
+      values.passwordHash = await bcrypt.hash(data.newPassword, 12);
+    }
+
+    const updated = await prisma.admin.update({
+      where: { id: admin.id },
+      data: values,
+    });
+
+    res.json({ token: signToken(updated), admin: publicAdmin(updated) });
   })
 );
 

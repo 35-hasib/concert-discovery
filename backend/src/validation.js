@@ -36,6 +36,37 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required").max(200),
 });
 
+export const adminAccountSchema = z
+  .object({
+    email: z
+      .string()
+      .trim()
+      .min(1, "Email is required")
+      .email("Enter a valid email address")
+      .max(200, "Email is too long"),
+    currentPassword: z.string().min(1, "Current password is required").max(200),
+    newPassword: z.string().max(200, "New password is too long").default(""),
+    confirmPassword: z.string().max(200, "Confirm password is too long").default(""),
+  })
+  .superRefine((value, ctx) => {
+    if (value.newPassword || value.confirmPassword) {
+      if (value.newPassword.length < 8) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["newPassword"],
+          message: "New password must be at least 8 characters",
+        });
+      }
+      if (value.newPassword !== value.confirmPassword) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["confirmPassword"],
+          message: "Passwords do not match",
+        });
+      }
+    }
+  });
+
 export const blogSchema = z
   .object({
     title: z.string().trim().min(3, "Title must be at least 3 characters").max(200, "Title is too long"),
