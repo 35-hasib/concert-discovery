@@ -127,10 +127,13 @@ The seed script reads these values from `backend/.env`:
 
 ### `frontend` Vercel project (server-side SEO renderer)
 
-The `frontend/api/seo.cjs` serverless function prerenders route-specific SEO HTML for public
+The `frontend/api/seo.mjs` serverless function prerenders route-specific SEO HTML for public
 routes (`/`, `/tours`, `/tours/:slug`, `/contact`, `/privacy`, `/terms`) together with the
 rewrites in `frontend/vercel.json`. Published tour pages are served with `index, follow` in the
 initial HTML; unknown or draft slugs get HTTP 404 with an `X-Robots-Tag: noindex` header.
+Temporary backend failures return HTTP 503 with `Retry-After` (never a 200 error shell), so search
+engines retry instead of recording a soft 404. The function must keep the `.mjs` extension: Vercel
+only deploys `.js`, `.mjs`, `.ts` and `.mts` files as serverless functions.
 
 | Variable | Required | Purpose |
 | --- | --- | --- |

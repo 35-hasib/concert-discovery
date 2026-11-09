@@ -36,25 +36,61 @@ export function TourDetailPage() {
 
   useEffect(() => {
     let active = true;
-    setState("loading");
-    setError("");
-    api<BlogDetailResult>(`/blogs/${encodeURIComponent(slug)}`)
-      .then((result) => {
-        if (!active) return;
-        setData(result);
-        setState("ready");
-      })
-      .catch((err) => {
-        if (!active) return;
-        if (err instanceof ApiError && err.status === 404) {
-          setState("notfound");
+    const lifecycle = new AbortController();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    async function fetchTour() {
+      const attemptController = new AbortController();
+      const onLifecycleAbort = () => attemptController.abort();
+      lifecycle.signal.addEventListener("abort", onLifecycleAbort, { once: true });
+      const timeout = setTimeout(() => attemptController.abort(), 20000);
+      try {
+        return await api<BlogDetailResult>(`/blogs/${encodeURIComponent(slug)}`, {
+          signal: attemptController.signal,
+        });
+      } finally {
+        clearTimeout(timeout);
+        lifecycle.signal.removeEventListener("abort", onLifecycleAbort);
+      }
+    }
+
+    async function load() {
+      setState("loading");
+      setError("");
+      const retries = 2;
+      let lastError: unknown = null;
+      for (let attempt = 0; attempt <= retries; attempt += 1) {
+        try {
+          const result = await fetchTour();
+          if (!active) return;
+          setData(result);
+          setState("ready");
           return;
+        } catch (err) {
+          if (!active) return;
+          if (err instanceof ApiError && err.status === 404) {
+            setState("notfound");
+            return;
+          }
+          lastError = err;
+          if (attempt < retries) {
+            await new Promise<void>((resolve) => {
+              timer = setTimeout(resolve, 1200 * (attempt + 1));
+            });
+            if (!active) return;
+          }
         }
-        setError(err instanceof ApiError ? err.message : "The announcement could not be loaded.");
-        setState("error");
-      });
+      }
+      if (!active) return;
+      setError(lastError instanceof ApiError ? lastError.message : "The announcement could not be loaded.");
+      setState("error");
+    }
+
+    load();
     return () => {
       active = false;
+      lifecycle.abort();
+      if (timer) clearTimeout(timer);
     };
   }, [slug, reload]);
 
@@ -137,10 +173,33 @@ export function TourDetailPage() {
         }
       : null;
 
+  const nextConcert = blog?.scheduleSummary?.nextConcert;
+  const nextConcertDate = nextConcert?.date ? new Date(nextConcert.date) : null;
+  const eventSchema =
+    blog && nextConcert && nextConcertDate && !Number.isNaN(nextConcertDate.getTime()) && nextConcert.city
+      ? {
+          "@context": "https://schema.org",
+          "@type": "MusicEvent",
+          name: `${blog.artistName} live in ${nextConcert.city}`,
+          startDate: nextConcertDate.toISOString(),
+          eventStatus: "https://schema.org/EventScheduled",
+          eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+          location: {
+            "@type": "Place",
+            name: nextConcert.venue || nextConcert.city,
+            address: { "@type": "PostalAddress", addressLocality: nextConcert.city },
+          },
+          performer: { "@type": "MusicGroup", name: blog.artistName },
+          url: articleUrl,
+          image: [image],
+        }
+      : null;
+
   const structuredData: Record<string, unknown>[] = [];
   if (articleSchema) structuredData.push(articleSchema);
   if (breadcrumbSchema) structuredData.push(breadcrumbSchema);
   if (albumSchema) structuredData.push(albumSchema);
+  if (eventSchema) structuredData.push(eventSchema);
 
   useSeo({
     title: blog
@@ -155,7 +214,7 @@ export function TourDetailPage() {
     imageAlt: blog?.title || "Tour announcement",
     type: "article",
     keywords: blog?.seoKeywords,
-    noindex: state === "notfound",
+    noindex: state === "notfound" || state === "error",
     publishedTime: blog ? new Date(publishedDate || blog.createdAt).toISOString() : undefined,
     modifiedTime: blog ? new Date(blog.updatedAt).toISOString() : undefined,
     jsonLd: structuredData.length > 0 ? structuredData : undefined,

@@ -1,8 +1,7 @@
-"use strict";
-
 const SITE_NAME_FALLBACK = "Concert Discovery";
-const API_TIMEOUT_MS = 8000;
-const TEMPLATE_TIMEOUT_MS = 5000;
+const API_TIMEOUT_MS = 20000;
+const API_ATTEMPTS = 2;
+const TEMPLATE_TIMEOUT_MS = 8000;
 const TEMPLATE_TTL_MS = 5 * 60 * 1000;
 const SETTINGS_TTL_MS = 60 * 1000;
 
@@ -101,7 +100,9 @@ function rewriteContentImages(contentHtml, origin) {
   );
 }
 
-async function fetchJson(url, timeoutMs) {
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function fetchJsonOnce(url, timeoutMs) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -119,11 +120,23 @@ async function fetchJson(url, timeoutMs) {
   }
 }
 
+async function fetchJson(url, timeoutMs = API_TIMEOUT_MS, attempts = API_ATTEMPTS) {
+  let result = { ok: false, status: 0, data: null };
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    result = await fetchJsonOnce(url, timeoutMs);
+    if (result.ok) return result;
+    if (result.status === 404) return result;
+    if (result.status >= 400 && result.status < 500) return result;
+    if (attempt < attempts - 1) await wait(750);
+  }
+  return result;
+}
+
 async function getSettings(apiBase) {
   if (settingsCache && Date.now() - settingsCache.at < SETTINGS_TTL_MS) {
     return settingsCache.settings;
   }
-  const result = await fetchJson(`${apiBase}/settings`, Math.min(API_TIMEOUT_MS, 4000));
+  const result = await fetchJson(`${apiBase}/settings`, 6000, 1);
   const settings = result.ok && result.data ? result.data.settings || {} : null;
   if (settings) settingsCache = { at: Date.now(), settings };
   return settings;
@@ -133,23 +146,29 @@ async function getTemplate(siteOrigin) {
   if (templateCache && Date.now() - templateCache.at < TEMPLATE_TTL_MS) {
     return templateCache.html;
   }
-  try {
+  let lastError = null;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TEMPLATE_TIMEOUT_MS);
-    const response = await fetch(`${siteOrigin}/index.html`, {
-      signal: controller.signal,
-      headers: { accept: "text/html" },
-    });
-    clearTimeout(timer);
-    if (!response.ok) throw new Error(`Template responded ${response.status}`);
-    const html = await response.text();
-    if (!/<div id="root"/i.test(html)) throw new Error("Template has no app root");
-    templateCache = { at: Date.now(), html };
-    return html;
-  } catch (error) {
-    if (templateCache && templateCache.html) return templateCache.html;
-    throw error;
+    try {
+      const response = await fetch(`${siteOrigin}/index.html`, {
+        signal: controller.signal,
+        headers: { accept: "text/html" },
+      });
+      if (!response.ok) throw new Error(`Template responded ${response.status}`);
+      const html = await response.text();
+      if (!/<div id="root"/i.test(html)) throw new Error("Template has no app root");
+      templateCache = { at: Date.now(), html };
+      return html;
+    } catch (error) {
+      lastError = error;
+      if (attempt === 0) await wait(500);
+    } finally {
+      clearTimeout(timer);
+    }
   }
+  if (templateCache && templateCache.html) return templateCache.html;
+  throw lastError || new Error("Template unavailable");
 }
 
 function buildHeadTags({ title, description, canonical, robots, ogType, ogImage, ogImageAlt, keywords, publishedTime, modifiedTime, jsonLdObjects, siteName }) {
@@ -171,9 +190,7 @@ function buildHeadTags({ title, description, canonical, robots, ogType, ogImage,
   if (keywords) tags.push(`<meta name="keywords" content="${escapeHtml(keywords)}" />`);
   if (ogImage) tags.push(`<meta property="og:image" content="${escapeHtml(ogImage)}" />`);
   if (ogImageAlt) tags.push(`<meta property="og:image:alt" content="${escapeHtml(ogImageAlt)}" />`);
-  for (const [property, value] of publishedTime ? [["article:published_time", publishedTime]] : []) {
-    tags.push(`<meta property="${property}" content="${escapeHtml(value)}" />`);
-  }
+  if (publishedTime) tags.push(`<meta property="article:published_time" content="${escapeHtml(publishedTime)}" />`);
   if (modifiedTime) tags.push(`<meta property="article:modified_time" content="${escapeHtml(modifiedTime)}" />`);
   tags.push(
     `<meta name="twitter:card" content="summary_large_image" />`,
@@ -199,10 +216,7 @@ function composeDocument(template, headTags, bodyContent) {
     html = html.replace(/<head(\s[^>]*)?>/i, `<head$1>\n    ${headTags}`);
   }
   if (bodyContent) {
-    const replaced = html.replace(
-      /(<div id="root">)([\s\S]{0,200}?)(<\/div>)/i,
-      `$1${bodyContent}$3`
-    );
+    const replaced = html.replace(/(<div id="root">)([\s\S]{0,200}?)(<\/div>)/i, `$1${bodyContent}$3`);
     html = replaced === html ? html.replace(/<\/body>/i, `<div id="root">${bodyContent}</div></body>`) : replaced;
   }
   return html;
@@ -222,11 +236,36 @@ function buildTourBody({ blog, siteOrigin, origin }) {
   const genreHref = `/tours?genre=${encodeURIComponent(String(blog.genre || ""))}`;
   const hasSchedule = blog.scheduleSummary ? blog.scheduleSummary.source !== "none" : true;
 
-  return `<div data-prerendered="true" class="container-page bg-white px-5 pb-12 pt-5"><div class="grid gap-[30px] lg:grid-cols-[minmax(0,1fr)_370px]"><article id="content" class="min-w-0"><nav class="flex flex-wrap items-center gap-1.5 rounded-[2px] bg-[#f5f5f5] px-[15px] py-2 text-[11px] text-[#888888]" aria-label="Breadcrumb"><a href="/" class="hover:text-ember-600">Home</a><span>/</span><a href="/tours" class="hover:text-ember-600">All Tours</a><span>/</span><span>${escapeHtml(blog.title)}</span></nav><header><h1 class="font-display text-[36px] uppercase leading-none text-[#535353] sm:text-[38px]">${escapeHtml(blog.artistName)} <span class="text-[#777777]">Tour Dates ${escapeHtml(year)}</span></h1><ul class="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-[11px] text-[#999999]"><li class="inline-flex items-center gap-1.5">${escapeHtml(tourWindow || "Dates to be announced")}</li><li class="inline-flex items-center gap-1.5"><a href="${escapeHtml(genreHref)}" class="uppercase tracking-[0.06em] text-ember-600 hover:underline">${escapeHtml(blog.genre)}</a></li></ul><div class="rule-accent mt-4"></div></header>${blog.featuredImage ? `<a href="${escapeHtml(`${siteOrigin}/tours/${blog.slug}`)}" class="mb-4 block overflow-hidden bg-[#222222] sm:float-left sm:mb-3 sm:mr-5 sm:w-[200px]"><img src="${escapeHtml(imageSrc)}" alt="${escapeHtml(blog.artistName)}" class="h-[200px] w-full object-cover" /></a>` : ""}<div class="text-[13px] leading-[1.8] text-[#535353]"><p><strong class="font-bold text-[#222222]">${escapeHtml(blog.title)}</strong>${blog.excerpt ? ` \u2014 ${escapeHtml(blog.excerpt)}` : ""}</p>${blog.tourName ? `<p class="mt-2"><b>Tour:</b> ${escapeHtml(blog.tourName)}</p>` : ""}</div><div class="clear-both"></div><div class="prose-article mt-4 [&amp;>*:first-child]:mt-0 text-[13px] leading-[1.8] text-[#535353]">${content}</div><section id="concert-schedule"><h2 class="mt-9 font-display text-[32px] uppercase leading-none text-[#535353]">${escapeHtml(blog.artistName)} Concert Schedule</h2><p class="mt-1 text-[12px] text-[#777777]">Browse upcoming dates and follow official ticket links to secure your seats. The full schedule loads just below.</p></section></article></div></div>`;
+  return `<div data-prerendered="true" class="container-page bg-white px-5 pb-12 pt-5"><div class="grid gap-[30px] lg:grid-cols-[minmax(0,1fr)_370px]"><article id="content" class="min-w-0"><nav class="flex flex-wrap items-center gap-1.5 rounded-[2px] bg-[#f5f5f5] px-[15px] py-2 text-[11px] text-[#888888]" aria-label="Breadcrumb"><a href="/" class="hover:text-ember-600">Home</a><span>/</span><a href="/tours" class="hover:text-ember-600">All Tours</a><span>/</span><span>${escapeHtml(blog.title)}</span></nav><header><h1 class="font-display text-[36px] uppercase leading-none text-[#535353] sm:text-[38px]">${escapeHtml(blog.artistName)} <span class="text-[#777777]">Tour Dates ${escapeHtml(year)}</span></h1><ul class="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-[11px] text-[#999999]"><li class="inline-flex items-center gap-1.5">${escapeHtml(tourWindow || "Dates to be announced")}</li><li class="inline-flex items-center gap-1.5"><a href="${escapeHtml(genreHref)}" class="uppercase tracking-[0.06em] text-ember-600 hover:underline">${escapeHtml(blog.genre)}</a></li></ul><div class="rule-accent mt-4"></div></header>${blog.featuredImage ? `<a href="${escapeHtml(`${siteOrigin}/tours/${blog.slug}`)}" class="mb-4 block overflow-hidden bg-[#222222] sm:float-left sm:mb-3 sm:mr-5 sm:w-[200px]"><img src="${escapeHtml(imageSrc)}" alt="${escapeHtml(blog.artistName)}" class="h-[200px] w-full object-cover" /></a>` : ""}<div class="text-[13px] leading-[1.8] text-[#535353]"><p><strong class="font-bold text-[#222222]">${escapeHtml(blog.title)}</strong>${blog.excerpt ? ` \u2014 ${escapeHtml(blog.excerpt)}` : ""}</p>${blog.tourName ? `<p class="mt-2"><b>Tour:</b> ${escapeHtml(blog.tourName)}</p>` : ""}</div><div class="clear-both"></div><div class="prose-article mt-4 [&amp;>*:first-child]:mt-0 text-[13px] leading-[1.8] text-[#535353]">${content}</div><section id="concert-schedule"><h2 class="mt-9 font-display text-[32px] uppercase leading-none text-[#535353]">${escapeHtml(blog.artistName)} Concert Schedule</h2><p class="mt-1 text-[12px] text-[#777777]">Browse upcoming dates and follow official ticket links to secure your seats. The full schedule loads just below.</p>${hasSchedule ? "" : `<p class="mt-2 text-[12px] text-[#777777]">Ticket links are coming soon.</p>`}</section></article></div></div>`;
 }
 
 function buildNotFoundBody() {
   return `<div data-prerendered="true" class="container-page flex min-h-[60vh] flex-col items-center justify-center bg-white px-5 py-20 text-center"><h1 class="font-display text-4xl uppercase text-[#535353]">Tour not found</h1><p class="mt-2 max-w-md text-sm text-[#777777]">This announcement does not exist, was unpublished, or moved to a new URL.</p><a href="/tours" class="btn-primary mt-6">Browse all tours</a></div>`;
+}
+
+function buildEventSchema({ blog, canonical, image }) {
+  const next = blog && blog.scheduleSummary ? blog.scheduleSummary.nextConcert : null;
+  if (!next || !next.date) return null;
+  const start = toDate(next.date);
+  if (!start) return null;
+  const city = String(next.city || "").trim();
+  if (!city) return null;
+  return {
+    "@context": "https://schema.org",
+    "@type": "MusicEvent",
+    name: `${blog.artistName} live in ${city}`,
+    startDate: start.toISOString(),
+    eventStatus: "https://schema.org/EventScheduled",
+    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+    location: {
+      "@type": "Place",
+      name: next.venue || city,
+      address: { "@type": "PostalAddress", addressLocality: city },
+    },
+    performer: { "@type": "MusicGroup", name: blog.artistName },
+    url: canonical,
+    image: [image],
+  };
 }
 
 function buildTourDocument({ blog, settingsName, siteOrigin, origin, apiBase }) {
@@ -266,6 +305,8 @@ function buildTourDocument({ blog, settingsName, siteOrigin, origin, apiBase }) 
   };
 
   const jsonLdObjects = [articleSchema, breadcrumbSchema];
+  const eventSchema = buildEventSchema({ blog, canonical, image });
+  if (eventSchema) jsonLdObjects.push(eventSchema);
   if (Array.isArray(blog.albums) && blog.albums.length > 0) {
     jsonLdObjects.push({
       "@context": "https://schema.org",
@@ -303,22 +344,23 @@ function buildTourDocument({ blog, settingsName, siteOrigin, origin, apiBase }) 
 
   return {
     status: 200,
-    cacheControl: "public, max-age=0, s-maxage=120, stale-while-revalidate=1800",
+    cacheControl: "public, max-age=0, s-maxage=300, stale-while-revalidate=86400",
     html: null,
     head,
     body: buildTourBody({ blog, siteOrigin, origin }),
   };
 }
 
-function buildTourNotFoundDocument({ apiBase, siteOrigin }) {
+function buildTourNotFoundDocument({ settingsName }) {
+  const name = settingsName || SITE_NAME_FALLBACK;
   const head = buildHeadTags({
-    title: `Tour not found | ${SITE_NAME_FALLBACK}`,
+    title: `Tour not found | ${name}`,
     description: "This tour announcement does not exist, was unpublished, or moved to a new URL.",
     canonical: "",
     robots: "noindex, follow",
     ogType: "website",
     jsonLdObjects: [],
-    siteName: SITE_NAME_FALLBACK,
+    siteName: name,
   });
   return {
     status: 404,
@@ -330,29 +372,50 @@ function buildTourNotFoundDocument({ apiBase, siteOrigin }) {
   };
 }
 
-function buildTourFallbackDocument({ apiBase, siteOrigin, origin, routePath }) {
-  const canonical = /^\/tours\/[a-z0-9-]+\/?$/i.test(routePath || "")
-    ? `${siteOrigin}${routePath.replace(/\/+$/, "")}`
-    : `${siteOrigin}/tours`;
+function buildPageNotFoundDocument({ settingsName }) {
+  const name = settingsName || SITE_NAME_FALLBACK;
   const head = buildHeadTags({
-    title: `Tour announcement | ${SITE_NAME_FALLBACK}`,
-    description: "Concert tour announcement with dates, concert schedule and official ticket links.",
-    canonical,
-    robots: "index, follow",
+    title: `Page not found | ${name}`,
+    description: "The page you requested could not be found.",
+    canonical: "",
+    robots: "noindex, follow",
     ogType: "website",
     jsonLdObjects: [],
-    siteName: SITE_NAME_FALLBACK,
+    siteName: name,
   });
   return {
-    status: 200,
-    cacheControl: "public, max-age=0, s-maxage=30",
+    status: 404,
+    cacheControl: "public, max-age=0, s-maxage=60",
+    noindexHeader: true,
+    html: null,
+    head,
+    body: buildNotFoundBody(),
+  };
+}
+
+function buildTourUnavailableDocument({ settingsName, routePath }) {
+  const name = settingsName || SITE_NAME_FALLBACK;
+  const head = buildHeadTags({
+    title: `Tour temporarily unavailable | ${name}`,
+    description: "This tour page is temporarily unavailable. Please try again shortly.",
+    canonical: "",
+    robots: "noindex, follow",
+    ogType: "website",
+    jsonLdObjects: [],
+    siteName: name,
+  });
+  return {
+    status: 503,
+    cacheControl: "no-store",
+    retryAfter: "30",
+    noindexHeader: true,
     html: null,
     head,
     body: "",
   };
 }
 
-function buildStaticDocument({ route, settings, siteOrigin, origin }) {
+function buildStaticDocument({ route, settings, siteOrigin, origin, filtered }) {
   const websiteName = settings?.websiteName || SITE_NAME_FALLBACK;
   const tagline = settings?.tagline || "";
   let title;
@@ -390,7 +453,7 @@ function buildStaticDocument({ route, settings, siteOrigin, origin }) {
     title,
     description,
     canonical: `${siteOrigin}${route}`,
-    robots: "index, follow",
+    robots: filtered ? "noindex, follow" : "index, follow",
     ogType: "website",
     jsonLdObjects,
     siteName: websiteName,
@@ -398,22 +461,22 @@ function buildStaticDocument({ route, settings, siteOrigin, origin }) {
 
   return {
     status: 200,
-    cacheControl: "public, max-age=0, s-maxage=120, stale-while-revalidate=600",
+    cacheControl: "public, max-age=0, s-maxage=300, stale-while-revalidate=3600",
+    noindexHeader: Boolean(filtered),
     html: null,
     head,
     body: "",
   };
 }
 
-function renderRoute({ routePath, apiBase, siteOrigin, origin, blog, settings, fetchError }) {
+function renderRoute({ routePath, apiBase, siteOrigin, origin, blog, settings, fetchError, filtered }) {
   const tourMatch = TOUR_PATTERN.exec(routePath);
   if (tourMatch) {
-    const slug = tourMatch[1].toLowerCase();
-    if (fetchError || (blog === undefined)) {
-      return buildTourFallbackDocument({ apiBase, siteOrigin, origin, routePath });
+    if (fetchError) {
+      return buildTourUnavailableDocument({ settingsName: settings?.websiteName, routePath });
     }
     if (!blog || blog.status !== "PUBLISHED") {
-      return buildTourNotFoundDocument({ apiBase, siteOrigin });
+      return buildTourNotFoundDocument({ settingsName: settings?.websiteName });
     }
     return buildTourDocument({
       blog,
@@ -424,11 +487,15 @@ function renderRoute({ routePath, apiBase, siteOrigin, origin, blog, settings, f
     });
   }
 
-  if (STATIC_ROUTES[routePath]) {
-    return buildStaticDocument({ route: routePath, settings, siteOrigin, origin });
+  if (routePath === "/404") {
+    return buildPageNotFoundDocument({ settingsName: settings?.websiteName });
   }
 
-  return null;
+  if (STATIC_ROUTES[routePath]) {
+    return buildStaticDocument({ route: routePath, settings, siteOrigin, origin, filtered });
+  }
+
+  return buildPageNotFoundDocument({ settingsName: settings?.websiteName });
 }
 
 async function serveRoute(req, res) {
@@ -454,7 +521,7 @@ async function serveRoute(req, res) {
   let fetchError = false;
   if (tourMatch) {
     const slug = tourMatch[1].toLowerCase();
-    const result = await fetchJson(`${apiBase}/blogs/${encodeURIComponent(slug)}`, API_TIMEOUT_MS);
+    const result = await fetchJson(`${apiBase}/blogs/${encodeURIComponent(slug)}`, API_TIMEOUT_MS, API_ATTEMPTS);
     if (!result.ok) {
       fetchError = result.status !== 404;
       blog = null;
@@ -463,7 +530,15 @@ async function serveRoute(req, res) {
     }
   }
 
-  const settings = STATIC_ROUTES[routePath] || tourMatch ? await getSettings(apiBase) : null;
+  const filtered =
+    routePath === "/tours" &&
+    (requestUrl.searchParams.has("q") ||
+      requestUrl.searchParams.has("genre") ||
+      (requestUrl.searchParams.has("sort") && requestUrl.searchParams.get("sort") === "oldest") ||
+      Number(requestUrl.searchParams.get("page") || 1) > 1);
+
+  const needsSettings = !fetchError && Boolean(STATIC_ROUTES[routePath] || tourMatch || routePath === "/404");
+  const settings = needsSettings ? await getSettings(apiBase) : null;
 
   const rendered = renderRoute({
     routePath,
@@ -473,11 +548,8 @@ async function serveRoute(req, res) {
     blog,
     settings,
     fetchError,
+    filtered,
   });
-
-  if (!rendered) {
-    return null;
-  }
 
   let template;
   try {
@@ -495,33 +567,39 @@ async function handler(req, res) {
     const rendered = await serveRoute(req, res);
     if (!rendered) {
       res.statusCode = 503;
-      res.setHeader("Content-Type", "text/plain");
-      res.setHeader("Retry-After", "5");
-      res.end("SEO service is temporarily unavailable.");
+      res.setHeader("Content-Type", "text/plain; charset=utf-8");
+      res.setHeader("Retry-After", "30");
+      res.setHeader("Cache-Control", "no-store");
+      res.end("The page is temporarily unavailable. Please try again shortly.");
       return;
     }
     res.statusCode = rendered.status;
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.setHeader("Vary", "Accept-Encoding");
     res.setHeader("Cache-Control", rendered.cacheControl);
+    if (rendered.retryAfter) res.setHeader("Retry-After", rendered.retryAfter);
     if (rendered.noindexHeader) {
-      res.setHeader("X-Robots-Tag", "noindex, nofollow");
+      res.setHeader("X-Robots-Tag", rendered.status === 404 ? "noindex, nofollow" : "noindex, follow");
     }
     res.end(rendered.html);
   } catch (error) {
     res.statusCode = 503;
-    res.setHeader("Content-Type", "text/plain");
-    res.setHeader("Retry-After", "5");
-    res.end("SEO service is temporarily unavailable.");
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.setHeader("Retry-After", "30");
+    res.setHeader("Cache-Control", "no-store");
+    res.end("The page is temporarily unavailable. Please try again shortly.");
   }
 }
 
-module.exports = {
+export default handler;
+export {
   handler,
   renderRoute,
   buildTourDocument,
   buildTourBody,
-  buildNotFoundDocument: buildTourNotFoundDocument,
+  buildEventSchema,
+  buildTourNotFoundDocument,
+  buildPageNotFoundDocument,
   buildStaticDocument,
   composeDocument,
 };

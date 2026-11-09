@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/seo.mjs": {
+      "maxDuration": 60
+    }
+  },
   "rewrites": [
     {
       "source": "/sitemap.xml",
@@ -7,6 +12,10 @@
     {
       "source": "/robots.txt",
       "destination": "https://concert-discovery.onrender.com/robots.txt"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
     },
     {
       "source": "/",
@@ -31,6 +40,10 @@
     {
       "source": "/terms",
       "destination": "/api/seo?path=/terms"
+    },
+    {
+      "source": "/404",
+      "destination": "/api/seo?path=/404"
     },
     {
       "source": "/(.*)",
