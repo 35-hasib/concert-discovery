@@ -9,6 +9,30 @@
       "destination": "https://concert-discovery.onrender.com/robots.txt"
     },
     {
+      "source": "/",
+      "destination": "/api/seo?path=/"
+    },
+    {
+      "source": "/tours",
+      "destination": "/api/seo?path=/tours"
+    },
+    {
+      "source": "/tours/:slug",
+      "destination": "/api/seo?path=/tours/:slug"
+    },
+    {
+      "source": "/contact",
+      "destination": "/api/seo?path=/contact"
+    },
+    {
+      "source": "/privacy",
+      "destination": "/api/seo?path=/privacy"
+    },
+    {
+      "source": "/terms",
+      "destination": "/api/seo?path=/terms"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

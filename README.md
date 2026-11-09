@@ -125,6 +125,24 @@ The seed script reads these values from `backend/.env`:
 | `VITE_API_URL` | Yes | Backend API base, e.g. `http://localhost:4100/api`. |
 | `VITE_SITE_URL` | Yes | Public site base used for links and widgets. |
 
+### `frontend` Vercel project (server-side SEO renderer)
+
+The `frontend/api/seo.cjs` serverless function prerenders route-specific SEO HTML for public
+routes (`/`, `/tours`, `/tours/:slug`, `/contact`, `/privacy`, `/terms`) together with the
+rewrites in `frontend/vercel.json`. Published tour pages are served with `index, follow` in the
+initial HTML; unknown or draft slugs get HTTP 404 with an `X-Robots-Tag: noindex` header.
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `BACKEND_ORIGIN` | No | Backend origin used by the SEO renderer, e.g. `https://concert-discovery.onrender.com`. Defaults to the Render URL. |
+| `SITE_URL` | No | Canonical site base used in the server-rendered `rel=canonical` and `og:url` tags. Falls back to the request host when unset. Should match `SITE_URL` in `backend/.env`. |
+
+To verify the renderer output locally after `npm --prefix frontend run build`:
+
+```bash
+node frontend/scripts/test-seo.cjs
+```
+
 Generate a production JWT secret with:
 
 ```bash

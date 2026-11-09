@@ -155,7 +155,7 @@ export function TourDetailPage() {
     imageAlt: blog?.title || "Tour announcement",
     type: "article",
     keywords: blog?.seoKeywords,
-    noindex: state === "notfound" || state === "error",
+    noindex: state === "notfound",
     publishedTime: blog ? new Date(publishedDate || blog.createdAt).toISOString() : undefined,
     modifiedTime: blog ? new Date(blog.updatedAt).toISOString() : undefined,
     jsonLd: structuredData.length > 0 ? structuredData : undefined,
